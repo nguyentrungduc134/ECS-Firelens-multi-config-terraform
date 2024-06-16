@@ -38,6 +38,7 @@ When specifying the configuration file from your S3 bucket, the init process wil
         {
             "Effect": "Allow",
             "Action": [
+                "s3:PutObject
                 "s3:GetObject",
                 "s3:GetBucketLocation"
             ],
@@ -51,13 +52,6 @@ When specifying the configuration file from your S3 bucket, the init process wil
 
 Bind mounts are used in Amazon ECS to allow containers to access files on the host instance. This is particularly useful for sharing data between the host and the containers.
 
-### Example Question and Answer
-
-**Question:** What is the purpose of using bind mounts in Amazon ECS?
-
-**Answer:** To allow containers to access files on the host instance.
-
-For more details, refer to the [Amazon ECS Bind Mount Examples](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/bind-mount-examples.html).
 
 ## Terraform Configuration for Fluent Bit Configuration File
 
@@ -66,42 +60,38 @@ The following Terraform resource configuration is used to upload a Fluent Bit co
 ### Terraform Resource Configuration
 
 ```hcl
-# Create a random string for the suffix
-resource "random_string" "suffix" {
-  length  = 8
-  special = false
-  upper   = false
-}
-
-module "s3_bucket" {
-  source = "terraform-aws-modules/s3-bucket/aws"
-
+[root@ip-172-31-27-174 ECS-Firelens-multi-config-terraform]# cat config.tf
+resource "aws_s3_bucket" "example_bucket" {
   bucket = "example-bucket-${random_string.suffix.result}"
-  acl    = "private"
-
-  versioning = {
-    enabled = true
-  }
 }
 
-# Use the templatefile function to generate the Fluent Bit configuration
-data "template_file" "fluentbit_config" {
-  template = file("${path.module}/fluentbit_config.tpl")
+resource "aws_s3_bucket_object" "input" {
+  bucket = aws_s3_bucket.example_bucket.bucket
+  key    = "input.conf"
+  source = "config/input.conf"
+}
+
+
+
+# Template for Fluent Bit OUTPUT configuration
+data "template_file" "fluent_bit_output" {
+  template = file("config/output.tpl")
 
   vars = {
-    bucket_name = "example-bucket-${random_string.suffix.result}"
+    bucket = "example-bucket-${random_string.suffix.result}"
   }
 }
 
 # Upload the generated Fluent Bit configuration to S3
-resource "aws_s3_object" "fluentbit_config" {
-  bucket = module.s3_bucket.bucket
-  key    = "fluentbit_config.conf"
-  content = data.template_file.fluentbit_config.rendered
+resource "aws_s3_object" "output" {
+  bucket = aws_s3_bucket.example_bucket.bucket
+  key    = "output.conf"
+  content = data.template_file.fluent_bit_output.rendered
 }
+
 ```
 
-In the `fluentbit_config.tpl` file, you can use the following template:
+In the `config/output.tpl` file, you can use the following template:
 
 ```txt
 [OUTPUT]
