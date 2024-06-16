@@ -38,7 +38,7 @@ When specifying the configuration file from your S3 bucket, the init process wil
         {
             "Effect": "Allow",
             "Action": [
-                "s3:PutObject
+                "s3:PutObject",
                 "s3:GetObject",
                 "s3:GetBucketLocation"
             ],
