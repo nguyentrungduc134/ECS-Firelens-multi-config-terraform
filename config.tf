@@ -8,6 +8,18 @@ resource "aws_s3_bucket_object" "input" {
   source = "config/input.conf"
 }
 
+resource "aws_s3_bucket_object" "filter" {
+  bucket = aws_s3_bucket.example_bucket.bucket
+  key    = "filter.conf"
+  source = "config/filter.conf"
+}
+
+resource "aws_s3_bucket_object" "parser" {
+  bucket = aws_s3_bucket.example_bucket.bucket
+  key    = "parser.conf"
+  source = "config/parser.conf"
+}
+
 
 
 # Template for Fluent Bit OUTPUT configuration

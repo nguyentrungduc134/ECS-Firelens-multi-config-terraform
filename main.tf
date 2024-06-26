@@ -6,8 +6,8 @@ data "aws_availability_zones" "available" {}
 
 locals {
   region = "us-east-1"
-  name   = "ex-${basename(path.cwd)}"
-
+  #name   = "ex-${basename(path.cwd)}"
+  name = "ecs"
   vpc_cidr = "10.0.0.0/16"
   azs      = slice(data.aws_availability_zones.available.names, 0, 3)
 
@@ -152,6 +152,14 @@ module "ecs_service" {
                 {
                     name = "aws_fluent_bit_init_s3_1",
                     value = "${aws_s3_bucket.example_bucket.arn}/input.conf"
+                },
+                {
+                    name = "aws_fluent_bit_init_s3_2",
+                    value = "${aws_s3_bucket.example_bucket.arn}/filter.conf"
+                },
+                {
+                    name = "aws_fluent_bit_init_s3_3",
+                    value = "${aws_s3_bucket.example_bucket.arn}/parser.conf"
                 },
                 {
                     name = "aws_fluent_bit_init_s3_4",
