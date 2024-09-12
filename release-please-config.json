@@ -1,4 +1,5 @@
-{  "packages": {
+{  
+    "packages": {
     // `.` is a special case for handling to root of the repository
     ".": {
       // overrides release-type for node
