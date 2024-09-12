@@ -5,7 +5,7 @@
     "extra-files": [
     {
       "type": "generic",
-      "path": "path/to/file.yml"
+      "path": "README.md"
     }
   ]     
   }
