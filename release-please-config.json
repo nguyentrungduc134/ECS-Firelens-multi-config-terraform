@@ -2,7 +2,12 @@
   "packages": {
     ".": {
     "release-type": "terraform-module",
-    "extra-files" : "README.md"
-     }
+    "extra-files": [
+    {
+      "type": "generic",
+      "path": "path/to/file.yml"
+    }
+  ]     
+  }
   }
 }
