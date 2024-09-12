@@ -1,7 +1,8 @@
 {
   "packages": {
     ".": {
-    "release-type": "terraform-module"
+    "release-type": "terraform-module",
+    "extra-files" : "README.md"
      }
   }
 }
