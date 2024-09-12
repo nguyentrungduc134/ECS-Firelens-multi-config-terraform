@@ -1,8 +1,7 @@
 # ECS-Firelens-multi-config-terraform     
 <!-- x-release-please-start-version -->
   ```
-    Version : '8.0.0'
-
+    Version : '0.0.0'
   ```
 <!-- x-release-please-end -->
 ## Introduction
