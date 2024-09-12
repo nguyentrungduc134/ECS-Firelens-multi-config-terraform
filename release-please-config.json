@@ -1,5 +1,5 @@
 {
   "packages": {
-    "path/to/pkg": {}
+    "release-type": "terraform-module"
   }
 }
