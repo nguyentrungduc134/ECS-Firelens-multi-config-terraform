@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/nguyentrungduc134/ECS-Firelens-multi-config-terraform/compare/v0.1.1...v0.1.2) (2024-09-12)
+
+
+### Bug Fixes
+
+* test ([627f982](https://github.com/nguyentrungduc134/ECS-Firelens-multi-config-terraform/commit/627f9821343318e76caf0f9d347a01ef2978546d))
+
 ## [0.1.1](https://github.com/nguyentrungduc134/ECS-Firelens-multi-config-terraform/compare/v0.1.0...v0.1.1) (2024-09-12)
 
 
