@@ -1,7 +1,8 @@
-{
   "packages": {
-    // defaults to the "node" type which also implements package-name lookup
-    // so no need to specify that here.
-    "release-type": "terraform-module",
-  }
-}
+    // `.` is a special case for handling to root of the repository
+    ".": {
+      // overrides release-type for node
+      "release-type": "node",
+      // exclude commits from that path from processing
+      "exclude-paths": ["path/to/myPyPkgA"]
+    }
