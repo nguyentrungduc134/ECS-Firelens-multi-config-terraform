@@ -1,12 +1,8 @@
 # ECS-Firelens-multi-config-terraform     
 <!-- x-release-please-start-version -->
-  ```ruby
-  use_frameworks!
+  ```
+    Version : '8.0.0'
 
-  target 'TARGET_NAME' do
-    pod 'GoogleMaps', '8.0.0'
-    pod 'Google-Maps-iOS-Utils', '4.2.2'
-  end
   \```
 <!-- x-release-please-end -->
 ## Introduction
