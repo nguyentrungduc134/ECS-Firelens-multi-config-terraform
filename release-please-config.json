@@ -3,8 +3,7 @@
     // `.` is a special case for handling to root of the repository
     ".": {
       // overrides release-type for node
-      "release-type": "node",
-      // exclude commits from that path from processing
-      "exclude-paths": ["path/to/myPyPkgA"]
+      "release-type": "terraform-module",
+          }
     }
 }
