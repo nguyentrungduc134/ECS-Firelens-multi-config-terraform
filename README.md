@@ -1,5 +1,14 @@
 # ECS-Firelens-multi-config-terraform     
-x-release-please-*
+<!-- x-release-please-start-version -->
+  ```ruby
+  use_frameworks!
+
+  target 'TARGET_NAME' do
+    pod 'GoogleMaps', '8.0.0'
+    pod 'Google-Maps-iOS-Utils', '4.2.2'
+  end
+  \```
+<!-- x-release-please-end -->
 ## Introduction
 
 This document provides a comprehensive guide on setting up your ECS Task role to enable log creation and downloading configuration files from an S3 bucket. Additionally, it includes details about using bind mounts in Amazon ECS and a specific Terraform resource configuration to upload a Fluent Bit configuration file to an S3 bucket.
