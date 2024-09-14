@@ -6,7 +6,11 @@
     {
       "type": "generic",
       "path": "README.md"
-    }
+    },
+    {
+      "type": "generic",
+      "path": "example/main.tf"
+    }      
   ]     
   }
   }
