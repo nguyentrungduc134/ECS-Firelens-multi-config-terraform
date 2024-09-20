@@ -1,77 +1,113 @@
-<!-- BEGIN_TF_DOCS -->
-## Requirements
+# ECS-Firelens-multi-config-terraform  
+<!-- x-release-please-start-version -->
+  ```
+    Version : '0.1.8'
+  ```
+<!-- x-release-please-end -->
+## Introduction
 
-| Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.66.1 |
+This document provides a comprehensive guide on setting up your ECS Task role to enable log creation and downloading configuration files from an S3 bucket. Additionally, it includes details about using bind mounts in Amazon ECS and a specific Terraform resource configuration to upload a Fluent Bit configuration file to an S3 bucket.
 
-## Providers
+## Enabling Log Creation (`logs:CreateLogGroup`)
 
-| Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.66.1 |
-| <a name="provider_random"></a> [random](#provider\_random) | n/a |
-| <a name="provider_template"></a> [template](#provider\_template) | n/a |
+To enable log creation, ensure that your ECS Task role includes the necessary permissions. The following policy grants the required permissions for creating log groups in Amazon CloudWatch.
 
-## Modules
+### Policy to Enable Log Creation
 
-| Name | Source | Version |
-|------|--------|---------|
-| <a name="module_alb"></a> [alb](#module\_alb) | terraform-aws-modules/alb/aws | ~> 9.0 |
-| <a name="module_autoscaling"></a> [autoscaling](#module\_autoscaling) | terraform-aws-modules/autoscaling/aws | ~> 6.5 |
-| <a name="module_autoscaling_sg"></a> [autoscaling\_sg](#module\_autoscaling\_sg) | terraform-aws-modules/security-group/aws | ~> 5.0 |
-| <a name="module_ecs_cluster"></a> [ecs\_cluster](#module\_ecs\_cluster) | terraform-aws-modules/ecs/aws//modules/cluster | 5.11.1 |
-| <a name="module_ecs_service"></a> [ecs\_service](#module\_ecs\_service) | terraform-aws-modules/ecs/aws//modules/service | n/a |
-| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | ~> 5.0 |
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "logs:CreateLogGroup"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
 
-## Resources
+## Setting Up Your ECS Task Role
 
-| Name | Type |
-|------|------|
-| [aws_iam_policy.create_log_group_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_iam_policy.s3_put_object_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
-| [aws_s3_bucket.example_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_object.filter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
-| [aws_s3_bucket_object.input](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
-| [aws_s3_bucket_object.parser](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
-| [aws_s3_object.output](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
-| [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
-| [aws_ssm_parameter.ecs_optimized_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
-| [template_file.fluent_bit_output](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) | data source |
+When specifying the configuration file from your S3 bucket, the init process will download it from your bucket. Ensure that your ECS Task role has the following permissions to access the S3 bucket:
 
-## Inputs
+### S3 Bucket Permissions for ECS Task Role
 
-No inputs.
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "s3:PutObject",
+                "s3:GetObject",
+                "s3:GetBucketLocation"
+            ],
+            "Resource": "*"
+        }
+    ]
+}
+```
 
-## Outputs
+## Purpose of Using Bind Mounts in Amazon ECS
 
-| Name | Description |
-|------|-------------|
-| <a name="output_cluster_arn"></a> [cluster\_arn](#output\_cluster\_arn) | ARN that identifies the cluster |
-| <a name="output_cluster_autoscaling_capacity_providers"></a> [cluster\_autoscaling\_capacity\_providers](#output\_cluster\_autoscaling\_capacity\_providers) | Map of capacity providers created and their attributes |
-| <a name="output_cluster_capacity_providers"></a> [cluster\_capacity\_providers](#output\_cluster\_capacity\_providers) | Map of cluster capacity providers attributes |
-| <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | ID that identifies the cluster |
-| <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name that identifies the cluster |
-| <a name="output_service_autoscaling_policies"></a> [service\_autoscaling\_policies](#output\_service\_autoscaling\_policies) | Map of autoscaling policies and their attributes |
-| <a name="output_service_autoscaling_scheduled_actions"></a> [service\_autoscaling\_scheduled\_actions](#output\_service\_autoscaling\_scheduled\_actions) | Map of autoscaling scheduled actions and their attributes |
-| <a name="output_service_container_definitions"></a> [service\_container\_definitions](#output\_service\_container\_definitions) | Container definitions |
-| <a name="output_service_iam_role_arn"></a> [service\_iam\_role\_arn](#output\_service\_iam\_role\_arn) | Service IAM role ARN |
-| <a name="output_service_iam_role_name"></a> [service\_iam\_role\_name](#output\_service\_iam\_role\_name) | Service IAM role name |
-| <a name="output_service_iam_role_unique_id"></a> [service\_iam\_role\_unique\_id](#output\_service\_iam\_role\_unique\_id) | Stable and unique string identifying the service IAM role |
-| <a name="output_service_id"></a> [service\_id](#output\_service\_id) | ARN that identifies the service |
-| <a name="output_service_name"></a> [service\_name](#output\_service\_name) | Name of the service |
-| <a name="output_service_task_definition_arn"></a> [service\_task\_definition\_arn](#output\_service\_task\_definition\_arn) | Full ARN of the Task Definition (including both `family` and `revision`) |
-| <a name="output_service_task_definition_revision"></a> [service\_task\_definition\_revision](#output\_service\_task\_definition\_revision) | Revision of the task in a particular family |
-| <a name="output_service_task_exec_iam_role_arn"></a> [service\_task\_exec\_iam\_role\_arn](#output\_service\_task\_exec\_iam\_role\_arn) | Task execution IAM role ARN |
-| <a name="output_service_task_exec_iam_role_name"></a> [service\_task\_exec\_iam\_role\_name](#output\_service\_task\_exec\_iam\_role\_name) | Task execution IAM role name |
-| <a name="output_service_task_exec_iam_role_unique_id"></a> [service\_task\_exec\_iam\_role\_unique\_id](#output\_service\_task\_exec\_iam\_role\_unique\_id) | Stable and unique string identifying the task execution IAM role |
-| <a name="output_service_task_set_arn"></a> [service\_task\_set\_arn](#output\_service\_task\_set\_arn) | The Amazon Resource Name (ARN) that identifies the task set |
-| <a name="output_service_task_set_id"></a> [service\_task\_set\_id](#output\_service\_task\_set\_id) | The ID of the task set |
-| <a name="output_service_task_set_stability_status"></a> [service\_task\_set\_stability\_status](#output\_service\_task\_set\_stability\_status) | The stability status. This indicates whether the task set has reached a steady state |
-| <a name="output_service_task_set_status"></a> [service\_task\_set\_status](#output\_service\_task\_set\_status) | The status of the task set |
-| <a name="output_service_tasks_iam_role_arn"></a> [service\_tasks\_iam\_role\_arn](#output\_service\_tasks\_iam\_role\_arn) | Tasks IAM role ARN |
-| <a name="output_service_tasks_iam_role_name"></a> [service\_tasks\_iam\_role\_name](#output\_service\_tasks\_iam\_role\_name) | Tasks IAM role name |
-| <a name="output_service_tasks_iam_role_unique_id"></a> [service\_tasks\_iam\_role\_unique\_id](#output\_service\_tasks\_iam\_role\_unique\_id) | Stable and unique string identifying the tasks IAM role |
-<!-- END_TF_DOCS -->
+Bind mounts are used in Amazon ECS to allow containers to access files on the host instance. This is particularly useful for sharing data between the host and the containers.
+
+
+## Terraform Configuration for Fluent Bit Configuration File
+
+The following Terraform resource configuration is used to upload a Fluent Bit configuration file to an S3 bucket.
+
+### Terraform Resource Configuration
+
+```hcl
+[root@ip-172-31-27-174 ECS-Firelens-multi-config-terraform]# cat config.tf
+resource "aws_s3_bucket" "example_bucket" {
+  bucket = "example-bucket-${random_string.suffix.result}"
+}
+
+resource "aws_s3_bucket_object" "input" {
+  bucket = aws_s3_bucket.example_bucket.bucket
+  key    = "input.conf"
+  source = "config/input.conf"
+}
+
+
+
+# Template for Fluent Bit OUTPUT configuration
+data "template_file" "fluent_bit_output" {
+  template = file("config/output.tpl")
+
+  vars = {
+    bucket = "example-bucket-${random_string.suffix.result}"
+  }
+}
+
+# Upload the generated Fluent Bit configuration to S3
+resource "aws_s3_object" "output" {
+  bucket = aws_s3_bucket.example_bucket.bucket
+  key    = "output.conf"
+  content = data.template_file.fluent_bit_output.rendered
+}
+
+```
+
+In the `config/output.tpl` file, you can use the following template:
+
+```txt
+[OUTPUT]
+    Name                         s3
+    Match                        app
+    bucket                       ${bucket_name}
+    region                       us-east-1
+    total_file_size              1M
+    upload_timeout               1m
+    use_put_object               On
+```
+
+## Conclusion
+
+This guide provides essential information on configuring ECS Task roles for log creation, setting up S3 bucket permissions, using bind mounts in ECS, and uploading Fluent Bit configuration files using Terraform. Follow the examples and best practices outlined here to ensure a smooth setup and operation of your ECS tasks.
