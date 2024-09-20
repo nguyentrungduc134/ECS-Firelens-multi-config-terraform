@@ -1,4 +1,27 @@
 <!-- BEGIN_TF_DOCS -->
-# Description
+## Description
+
+`terraform-docs` is a tool that generates documentation for Terraform modules in various formats like Markdown, JSON, and others. This guide covers how to install `terraform-docs`, create a custom template, and generate module documentation in Markdown format.
+
+### 1. Install `terraform-docs`
+
+Follow the official installation guide to install `terraform-docs`:
+
+Official documentation: [Install terraform-docs](https://terraform-docs.io/user-guide/installation/)
+
+### 2. Create a Template
+output.template
+
+### 3. Run `terraform-docs` Command
+
+Once your template is ready, use the `terraform-docs` command to generate the documentation and output it to a Markdown file.
+
+Run the following command from the root of your Terraform module:
+
+```bash
+./terraform-docs markdown table \
+  --output-file usage.md \
+  --output-template "$(cat output.template)" .
+```
 {{ .Content }}
 <!-- END_TF_DOCS -->
