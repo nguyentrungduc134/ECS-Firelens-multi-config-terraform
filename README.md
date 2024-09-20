@@ -1,432 +1,77 @@
-# terraform-docs
-
-[![Build Status](https://github.com/terraform-docs/terraform-docs/workflows/ci/badge.svg)](https://github.com/terraform-docs/terraform-docs/actions) [![GoDoc](https://pkg.go.dev/badge/github.com/terraform-docs/terraform-docs)](https://pkg.go.dev/github.com/terraform-docs/terraform-docs) [![Go Report Card](https://goreportcard.com/badge/github.com/terraform-docs/terraform-docs)](https://goreportcard.com/report/github.com/terraform-docs/terraform-docs) [![Codecov Report](https://codecov.io/gh/terraform-docs/terraform-docs/branch/master/graph/badge.svg)](https://codecov.io/gh/terraform-docs/terraform-docs) [![License](https://img.shields.io/github/license/terraform-docs/terraform-docs)](https://github.com/terraform-docs/terraform-docs/blob/master/LICENSE) [![Latest release](https://img.shields.io/github/v/release/terraform-docs/terraform-docs)](https://github.com/terraform-docs/terraform-docs/releases)
-
-![terraform-docs-teaser](./images/terraform-docs-teaser.png)
-
-## What is terraform-docs
-
-A utility to generate documentation from Terraform modules in various output formats.
-
-## Installation
-
-macOS users can install using [Homebrew]:
-
-```bash
-brew install terraform-docs
-```
-
-or
-
-```bash
-brew install terraform-docs/tap/terraform-docs
-```
-
-Windows users can install using [Scoop]:
-
-```bash
-scoop bucket add terraform-docs https://github.com/terraform-docs/scoop-bucket
-scoop install terraform-docs
-```
-
-or [Chocolatey]:
-
-```bash
-choco install terraform-docs
-```
-
-Stable binaries are also available on the [releases] page. To install, download the
-binary for your platform from "Assets" and place this into your `$PATH`:
-
-```bash
-curl -Lo ./terraform-docs.tar.gz https://github.com/terraform-docs/terraform-docs/releases/download/v0.19.0/terraform-docs-v0.19.0-$(uname)-amd64.tar.gz
-tar -xzf terraform-docs.tar.gz
-chmod +x terraform-docs
-mv terraform-docs /usr/local/bin/terraform-docs
-```
-
-**NOTE:** Windows releases are in `ZIP` format.
-
-The latest version can be installed using `go install` or `go get`:
-
-```bash
-# go1.17+
-go install github.com/terraform-docs/terraform-docs@v0.19.0
-```
-
-```bash
-# go1.16
-GO111MODULE="on" go get github.com/terraform-docs/terraform-docs@v0.19.0
-```
-
-**NOTE:** please use the latest Go to do this, minimum `go1.16` is required.
-
-This will put `terraform-docs` in `$(go env GOPATH)/bin`. If you encounter the error
-`terraform-docs: command not found` after installation then you may need to either add
-that directory to your `$PATH` as shown [here] or do a manual installation by cloning
-the repo and run `make build` from the repository which will put `terraform-docs` in:
-
-```bash
-$(go env GOPATH)/src/github.com/terraform-docs/terraform-docs/bin/$(uname | tr '[:upper:]' '[:lower:]')-amd64/terraform-docs
-```
-
-## Usage
-
-### Running the binary directly
-
-To run and generate documentation into README within a directory:
-
-```bash
-terraform-docs markdown table --output-file README.md --output-mode inject /path/to/module
-```
-
-Check [`output`] configuration for more details and examples.
-
-### Using docker
-
-terraform-docs can be run as a container by mounting a directory with `.tf`
-files in it and run the following command:
-
-```bash
-docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) quay.io/terraform-docs/terraform-docs:0.19.0 markdown /terraform-docs
-```
-
-If `output.file` is not enabled for this module, generated output can be redirected
-back to a file:
-
-```bash
-docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) quay.io/terraform-docs/terraform-docs:0.19.0 markdown /terraform-docs > doc.md
-```
-
-**NOTE:** Docker tag `latest` refers to _latest_ stable released version and `edge`
-refers to HEAD of `master` at any given point in time.
-
-### Using GitHub Actions
-
-To use terraform-docs GitHub Action, configure a YAML workflow file (e.g.
-`.github/workflows/documentation.yml`) with the following:
-
-```yaml
-name: Generate terraform docs
-on:
-  - pull_request
-
-jobs:
-  docs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        ref: ${{ github.event.pull_request.head.ref }}
-
-    - name: Render terraform docs and push changes back to PR
-      uses: terraform-docs/gh-actions@main
-      with:
-        working-dir: .
-        output-file: README.md
-        output-method: inject
-        git-push: "true"
-```
-
-Read more about [terraform-docs GitHub Action] and its configuration and
-examples.
-
-### pre-commit hook
-
-With pre-commit, you can ensure your Terraform module documentation is kept
-up-to-date each time you make a commit.
-
-First [install pre-commit] and then create or update a `.pre-commit-config.yaml`
-in the root of your Git repo with at least the following content:
-
-```yaml
-repos:
-  - repo: https://github.com/terraform-docs/terraform-docs
-    rev: "v0.19.0"
-    hooks:
-      - id: terraform-docs-go
-        args: ["markdown", "table", "--output-file", "README.md", "./mymodule/path"]
-```
-
-Then run:
-
-```bash
-pre-commit install
-pre-commit install-hooks
-```
-
-Further changes to your module's `.tf` files will cause an update to documentation
-when you make a commit.
-
-## Configuration
-
-terraform-docs can be configured with a yaml file. The default name of this file is
-`.terraform-docs.yml` and the path order for locating it is:
-
-1. root of module directory
-1. `.config/` folder at root of module directory
-1. current directory
-1. `.config/` folder at current directory
-1. `$HOME/.tfdocs.d/`
-
-```yaml
-formatter: "" # this is required
-
-version: ""
-
-header-from: main.tf
-footer-from: ""
-
-recursive:
-  enabled: false
-  path: modules
-  include-main: true
-
-sections:
-  hide: []
-  show: []
-
-content: ""
-
-output:
-  file: ""
-  mode: inject
-  template: |-
-    <!-- BEGIN_TF_DOCS -->
-    {{ .Content }}
-    <!-- END_TF_DOCS -->
-
-output-values:
-  enabled: false
-  from: ""
-
-sort:
-  enabled: true
-  by: name
-
-settings:
-  anchor: true
-  color: true
-  default: true
-  description: false
-  escape: true
-  hide-empty: false
-  html: true
-  indent: 2
-  lockfile: true
-  read-comments: true
-  required: true
-  sensitive: true
-  type: true
-```
-
-## Content Template
-
-Generated content can be customized further away with `content` in configuration.
-If the `content` is empty the default order of sections is used.
-
-Compatible formatters for customized content are `asciidoc` and `markdown`. `content`
-will be ignored for other formatters.
-
-`content` is a Go template with following additional variables:
-
-- `{{ .Header }}`
-- `{{ .Footer }}`
-- `{{ .Inputs }}`
-- `{{ .Modules }}`
-- `{{ .Outputs }}`
-- `{{ .Providers }}`
-- `{{ .Requirements }}`
-- `{{ .Resources }}`
-
-and following functions:
-
-- `{{ include "relative/path/to/file" }}`
-
-These variables are the generated output of individual sections in the selected
-formatter. For example `{{ .Inputs }}` is Markdown Table representation of _inputs_
-when formatter is set to `markdown table`.
-
-Note that sections visibility (i.e. `sections.show` and `sections.hide`) takes
-precedence over the `content`.
-
-Additionally there's also one extra special variable avaialble to the `content`:
-
-- `{{ .Module }}`
-
-As opposed to the other variables mentioned above, which are generated sections
-based on a selected formatter, the `{{ .Module }}` variable is just a `struct`
-representing a [Terraform module].
-
-````yaml
-content: |-
-  Any arbitrary text can be placed anywhere in the content
-
-  {{ .Header }}
-
-  and even in between sections
-
-  {{ .Providers }}
-
-  and they don't even need to be in the default order
-
-  {{ .Outputs }}
-
-  include any relative files
-
-  {{ include "relative/path/to/file" }}
-
-  {{ .Inputs }}
-
-  # Examples
-
-  ```hcl
-  {{ include "examples/foo/main.tf" }}
-  ```
-
-  ## Resources
-
-  {{ range .Module.Resources }}
-  - {{ .GetMode }}.{{ .Spec }} ({{ .Position.Filename }}#{{ .Position.Line }})
-  {{- end }}
-````
-
-## Build on top of terraform-docs
-
-terraform-docs primary use-case is to be utilized as a standalone binary, but
-some parts of it is also available publicly and can be imported in your project
-as a library.
-
-```go
-import (
-    "github.com/terraform-docs/terraform-docs/format"
-    "github.com/terraform-docs/terraform-docs/print"
-    "github.com/terraform-docs/terraform-docs/terraform"
-)
-
-// buildTerraformDocs for module root `path` and provided content `tmpl`.
-func buildTerraformDocs(path string, tmpl string) (string, error) {
-    config := print.DefaultConfig()
-    config.ModuleRoot = path // module root path (can be relative or absolute)
-
-    module, err := terraform.LoadWithOptions(config)
-    if err != nil {
-        return "", err
-    }
-
-    // Generate in Markdown Table format
-    formatter := format.NewMarkdownTable(config)
-
-    if err := formatter.Generate(module); err != nil {
-        return "", err
-    }
-
-    // // Note: if you don't intend to provide additional template for the generated
-    // // content, or the target format doesn't provide templating (e.g. json, yaml,
-    // // xml, or toml) you can use `Content()` function instead of `Render()`.
-    // // `Content()` returns all the sections combined with predefined order.
-    // return formatter.Content(), nil
-
-    return formatter.Render(tmpl)
-}
-```
-
-## Plugin
-
-Generated output can be heavily customized with [`content`], but if using that
-is not enough for your use-case, you can write your own plugin.
-
-In order to install a plugin the following steps are needed:
-
-- download the plugin and place it in `~/.tfdocs.d/plugins` (or `./.tfdocs.d/plugins`)
-- make sure the plugin file name is `tfdocs-format-<NAME>`
-- modify [`formatter`] of `.terraform-docs.yml` file to be `<NAME>`
-
-**Important notes:**
-
-- if the plugin file name is different than the example above, terraform-docs won't
-be able to to pick it up nor register it properly
-- you can only use plugin thorough `.terraform-docs.yml` file and it cannot be used
-with CLI arguments
-
-To create a new plugin create a new repository called `tfdocs-format-<NAME>` with
-following `main.go`:
-
-```go
-package main
-
-import (
-    _ "embed" //nolint
-
-    "github.com/terraform-docs/terraform-docs/plugin"
-    "github.com/terraform-docs/terraform-docs/print"
-    "github.com/terraform-docs/terraform-docs/template"
-    "github.com/terraform-docs/terraform-docs/terraform"
-)
-
-func main() {
-    plugin.Serve(&plugin.ServeOpts{
-        Name:    "<NAME>",
-        Version: "0.1.0",
-        Printer: printerFunc,
-    })
-}
-
-//go:embed sections.tmpl
-var tplCustom []byte
-
-// printerFunc the function being executed by the plugin client.
-func printerFunc(config *print.Config, module *terraform.Module) (string, error) {
-    tpl := template.New(config,
-        &template.Item{Name: "custom", Text: string(tplCustom)},
-    )
-
-    rendered, err := tpl.Render("custom", module)
-    if err != nil {
-        return "", err
-    }
-
-    return rendered, nil
-}
-```
-
-Please refer to [tfdocs-format-template] for more details. You can create a new
-repository from it by clicking on `Use this template` button.
-
-## Documentation
-
-- **Users**
-  - Read the [User Guide] to learn how to use terraform-docs
-  - Read the [Formats Guide] to learn about different output formats of terraform-docs
-  - Refer to [Config File Reference] for all the available configuration options
-- **Developers**
-  - Read [Contributing Guide] before submitting a pull request
-
-Visit [our website] for all documentation.
-
-## Community
-
-- Discuss terraform-docs on [Slack]
-
-## License
-
-MIT License - Copyright (c) 2021 The terraform-docs Authors.
-
-[Chocolatey]: https://www.chocolatey.org
-[Config File Reference]: https://terraform-docs.io/user-guide/configuration/
-[`content`]: https://terraform-docs.io/user-guide/configuration/content/
-[Contributing Guide]: CONTRIBUTING.md
-[Formats Guide]: https://terraform-docs.io/reference/terraform-docs/
-[`formatter`]: https://terraform-docs.io/user-guide/configuration/formatter/
-[here]: https://golang.org/doc/code.html#GOPATH
-[Homebrew]: https://brew.sh
-[install pre-commit]: https://pre-commit.com/#install
-[`output`]: https://terraform-docs.io/user-guide/configuration/output/
-[releases]: https://github.com/terraform-docs/terraform-docs/releases
-[Scoop]: https://scoop.sh/
-[Slack]: https://slack.terraform-docs.io/
-[terraform-docs GitHub Action]: https://github.com/terraform-docs/gh-actions
-[Terraform module]: https://pkg.go.dev/github.com/terraform-docs/terraform-docs/terraform#Module
-[tfdocs-format-template]: https://github.com/terraform-docs/tfdocs-format-template
-[our website]: https://terraform-docs.io/
-[User Guide]: https://terraform-docs.io/user-guide/introduction/
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 4.66.1 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 4.66.1 |
+| <a name="provider_random"></a> [random](#provider\_random) | n/a |
+| <a name="provider_template"></a> [template](#provider\_template) | n/a |
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_alb"></a> [alb](#module\_alb) | terraform-aws-modules/alb/aws | ~> 9.0 |
+| <a name="module_autoscaling"></a> [autoscaling](#module\_autoscaling) | terraform-aws-modules/autoscaling/aws | ~> 6.5 |
+| <a name="module_autoscaling_sg"></a> [autoscaling\_sg](#module\_autoscaling\_sg) | terraform-aws-modules/security-group/aws | ~> 5.0 |
+| <a name="module_ecs_cluster"></a> [ecs\_cluster](#module\_ecs\_cluster) | terraform-aws-modules/ecs/aws//modules/cluster | 5.11.1 |
+| <a name="module_ecs_service"></a> [ecs\_service](#module\_ecs\_service) | terraform-aws-modules/ecs/aws//modules/service | n/a |
+| <a name="module_vpc"></a> [vpc](#module\_vpc) | terraform-aws-modules/vpc/aws | ~> 5.0 |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_iam_policy.create_log_group_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.s3_put_object_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_s3_bucket.example_bucket](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
+| [aws_s3_bucket_object.filter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
+| [aws_s3_bucket_object.input](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
+| [aws_s3_bucket_object.parser](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_object) | resource |
+| [aws_s3_object.output](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [aws_availability_zones.available](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/availability_zones) | data source |
+| [aws_ssm_parameter.ecs_optimized_ami](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ssm_parameter) | data source |
+| [template_file.fluent_bit_output](https://registry.terraform.io/providers/hashicorp/template/latest/docs/data-sources/file) | data source |
+
+## Inputs
+
+No inputs.
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_cluster_arn"></a> [cluster\_arn](#output\_cluster\_arn) | ARN that identifies the cluster |
+| <a name="output_cluster_autoscaling_capacity_providers"></a> [cluster\_autoscaling\_capacity\_providers](#output\_cluster\_autoscaling\_capacity\_providers) | Map of capacity providers created and their attributes |
+| <a name="output_cluster_capacity_providers"></a> [cluster\_capacity\_providers](#output\_cluster\_capacity\_providers) | Map of cluster capacity providers attributes |
+| <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | ID that identifies the cluster |
+| <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name that identifies the cluster |
+| <a name="output_service_autoscaling_policies"></a> [service\_autoscaling\_policies](#output\_service\_autoscaling\_policies) | Map of autoscaling policies and their attributes |
+| <a name="output_service_autoscaling_scheduled_actions"></a> [service\_autoscaling\_scheduled\_actions](#output\_service\_autoscaling\_scheduled\_actions) | Map of autoscaling scheduled actions and their attributes |
+| <a name="output_service_container_definitions"></a> [service\_container\_definitions](#output\_service\_container\_definitions) | Container definitions |
+| <a name="output_service_iam_role_arn"></a> [service\_iam\_role\_arn](#output\_service\_iam\_role\_arn) | Service IAM role ARN |
+| <a name="output_service_iam_role_name"></a> [service\_iam\_role\_name](#output\_service\_iam\_role\_name) | Service IAM role name |
+| <a name="output_service_iam_role_unique_id"></a> [service\_iam\_role\_unique\_id](#output\_service\_iam\_role\_unique\_id) | Stable and unique string identifying the service IAM role |
+| <a name="output_service_id"></a> [service\_id](#output\_service\_id) | ARN that identifies the service |
+| <a name="output_service_name"></a> [service\_name](#output\_service\_name) | Name of the service |
+| <a name="output_service_task_definition_arn"></a> [service\_task\_definition\_arn](#output\_service\_task\_definition\_arn) | Full ARN of the Task Definition (including both `family` and `revision`) |
+| <a name="output_service_task_definition_revision"></a> [service\_task\_definition\_revision](#output\_service\_task\_definition\_revision) | Revision of the task in a particular family |
+| <a name="output_service_task_exec_iam_role_arn"></a> [service\_task\_exec\_iam\_role\_arn](#output\_service\_task\_exec\_iam\_role\_arn) | Task execution IAM role ARN |
+| <a name="output_service_task_exec_iam_role_name"></a> [service\_task\_exec\_iam\_role\_name](#output\_service\_task\_exec\_iam\_role\_name) | Task execution IAM role name |
+| <a name="output_service_task_exec_iam_role_unique_id"></a> [service\_task\_exec\_iam\_role\_unique\_id](#output\_service\_task\_exec\_iam\_role\_unique\_id) | Stable and unique string identifying the task execution IAM role |
+| <a name="output_service_task_set_arn"></a> [service\_task\_set\_arn](#output\_service\_task\_set\_arn) | The Amazon Resource Name (ARN) that identifies the task set |
+| <a name="output_service_task_set_id"></a> [service\_task\_set\_id](#output\_service\_task\_set\_id) | The ID of the task set |
+| <a name="output_service_task_set_stability_status"></a> [service\_task\_set\_stability\_status](#output\_service\_task\_set\_stability\_status) | The stability status. This indicates whether the task set has reached a steady state |
+| <a name="output_service_task_set_status"></a> [service\_task\_set\_status](#output\_service\_task\_set\_status) | The status of the task set |
+| <a name="output_service_tasks_iam_role_arn"></a> [service\_tasks\_iam\_role\_arn](#output\_service\_tasks\_iam\_role\_arn) | Tasks IAM role ARN |
+| <a name="output_service_tasks_iam_role_name"></a> [service\_tasks\_iam\_role\_name](#output\_service\_tasks\_iam\_role\_name) | Tasks IAM role name |
+| <a name="output_service_tasks_iam_role_unique_id"></a> [service\_tasks\_iam\_role\_unique\_id](#output\_service\_tasks\_iam\_role\_unique\_id) | Stable and unique string identifying the tasks IAM role |
+<!-- END_TF_DOCS -->
